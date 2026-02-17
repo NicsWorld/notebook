@@ -65,6 +65,13 @@ export async function pageRoutes(app: FastifyInstance) {
             limit: query.limit,
             offset: query.offset,
             with: {
+                knowledgeUnits: {
+                    columns: {
+                        id: true,
+                        type: true,
+                        content: true,
+                    },
+                },
                 pageTags: {
                     with: {
                         tag: true,
