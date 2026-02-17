@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { getPage, getPageStatus, deletePage, type Page, type KnowledgeUnit } from "../api/client";
 import { StatusBadge } from "../components/StatusBadge";
 import { TagBadge } from "../components/TagBadge";
-import { KnowledgeSection } from "../components/KnowledgeCard";
+import { KnowledgeSection, KnowledgeDashboard, typeOrder } from "../components/KnowledgeCard";
 
 export function PageViewPage() {
     const { id } = useParams<{ id: string }>();
@@ -103,7 +103,6 @@ export function PageViewPage() {
     }
 
     const kuGroups = groupByType(page.knowledgeUnits || []);
-    const typeOrder: KnowledgeUnit["type"][] = ["task", "action_item", "idea", "question", "note"];
 
     return (
         <div className="page-detail">
@@ -154,6 +153,9 @@ export function PageViewPage() {
 
             {page.status === "completed" && (
                 <>
+                    {/* Summary Dashboard */}
+                    <KnowledgeDashboard groups={kuGroups} />
+
                     {/* Clean text */}
                     {page.cleanText && (
                         <div className="text-section">
