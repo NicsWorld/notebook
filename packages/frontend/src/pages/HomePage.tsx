@@ -3,7 +3,36 @@ import { useNavigate } from "react-router-dom";
 import { CameraCapture } from "../components/CameraCapture";
 import { StatusBadge } from "../components/StatusBadge";
 import { TagBadge } from "../components/TagBadge";
-import { getPages, getPageStatus, type Page } from "../api/client";
+import { getPages, getPageStatus, type Page, type KnowledgeUnit } from "../api/client";
+
+const kuChipConfig: Record<KnowledgeUnit["type"], { icon: string; label: string }> = {
+    task: { icon: "✅", label: "tasks" },
+    action_item: { icon: "🎯", label: "actions" },
+    idea: { icon: "💡", label: "ideas" },
+    question: { icon: "❓", label: "questions" },
+    note: { icon: "📝", label: "notes" },
+};
+
+function KuCountChips({ units }: { units?: KnowledgeUnit[] }) {
+    if (!units || units.length === 0) return null;
+    const counts: Partial<Record<KnowledgeUnit["type"], number>> = {};
+    for (const u of units) {
+        counts[u.type] = (counts[u.type] || 0) + 1;
+    }
+    const types: KnowledgeUnit["type"][] = ["task", "action_item", "idea", "question", "note"];
+    const active = types.filter((t) => counts[t]);
+    if (active.length === 0) return null;
+
+    return (
+        <div className="page-card-ku-chips">
+            {active.map((t) => (
+                <span key={t} className="ku-chip">
+                    {kuChipConfig[t].icon} {counts[t]}
+                </span>
+            ))}
+        </div>
+    );
+}
 
 export function HomePage() {
     const [pages, setPages] = useState<Page[]>([]);
@@ -113,6 +142,7 @@ export function HomePage() {
                                 {page.cleanText && (
                                     <p className="page-card-preview">{page.cleanText}</p>
                                 )}
+                                <KuCountChips units={page.knowledgeUnits} />
                                 {page.tags && page.tags.length > 0 && (
                                     <div className="page-card-tags">
                                         {page.tags.map((tag) => (
