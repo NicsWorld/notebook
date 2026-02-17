@@ -20,6 +20,7 @@ export interface KnowledgeUnit {
     pageId: string;
     type: "task" | "idea" | "note" | "question" | "action_item";
     content: string;
+    completed: boolean;
     metadata: Record<string, unknown> | null;
     createdAt: string;
     page?: Pick<Page, "id" | "imageUrl" | "createdAt">;
@@ -115,5 +116,11 @@ export async function getKnowledgeUnits(params?: {
 export async function getTags(): Promise<{ tags: Tag[] }> {
     const res = await fetch(`${API_BASE}/tags`);
     if (!res.ok) throw new Error(`Failed to fetch tags: ${res.statusText}`);
+    return res.json();
+}
+
+export async function toggleKnowledgeUnit(id: string): Promise<{ id: string; completed: boolean }> {
+    const res = await fetch(`${API_BASE}/knowledge-units/${id}/toggle`, { method: "PATCH" });
+    if (!res.ok) throw new Error(`Failed to toggle: ${res.statusText}`);
     return res.json();
 }
