@@ -1,11 +1,12 @@
 import { FastifyInstance } from "fastify";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, sql, not } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { db } from "../db/index.js";
 import { pages, knowledgeUnits, pageTags, tags } from "../db/schema.js";
 import { saveUploadedFile, getImageUrl } from "../services/storage.service.js";
 import { pageProcessingQueue } from "../jobs/queue.js";
 import { pageListQuerySchema, pageIdParamSchema } from "../lib/zod-schemas.js";
+import { z } from "zod";
 
 export async function pageRoutes(app: FastifyInstance) {
     // Upload a new page image
@@ -70,6 +71,7 @@ export async function pageRoutes(app: FastifyInstance) {
                         id: true,
                         type: true,
                         content: true,
+                        completed: true,
                     },
                 },
                 pageTags: {
@@ -160,5 +162,27 @@ export async function pageRoutes(app: FastifyInstance) {
         }
 
         return reply.send({ message: "Page deleted", id: deleted.id });
+    });
+
+    // Toggle knowledge unit completed state
+    app.patch("/api/knowledge-units/:id/toggle", async (request, reply) => {
+        const { id } = z.object({ id: z.string().uuid() }).parse(request.params);
+
+        const existing = await db.query.knowledgeUnits.findFirst({
+            where: eq(knowledgeUnits.id, id),
+            columns: { id: true, completed: true },
+        });
+
+        if (!existing) {
+            return reply.status(404).send({ error: "Knowledge unit not found" });
+        }
+
+        const [updated] = await db
+            .update(knowledgeUnits)
+            .set({ completed: !existing.completed })
+            .where(eq(knowledgeUnits.id, id))
+            .returning({ id: knowledgeUnits.id, completed: knowledgeUnits.completed });
+
+        return reply.send(updated);
     });
 }

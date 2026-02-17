@@ -1,0 +1,1 @@
+ALTER TABLE "knowledge_units" ADD COLUMN "completed" boolean DEFAULT false NOT NULL;
