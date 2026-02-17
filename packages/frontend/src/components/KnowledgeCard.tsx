@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { KnowledgeUnit } from "../api/client";
+import { toggleKnowledgeUnit } from "../api/client";
 
 const typeConfig: Record<KnowledgeUnit["type"], { icon: string; label: string; color: string }> = {
     task: { icon: "✅", label: "Tasks", color: "var(--accent-emerald)" },
@@ -15,13 +16,24 @@ interface KnowledgeItemProps {
 }
 
 export function KnowledgeItem({ unit, checkable = false }: KnowledgeItemProps) {
-    const [checked, setChecked] = useState(false);
+    const [checked, setChecked] = useState(unit.completed ?? false);
     const config = typeConfig[unit.type];
+
+    const handleToggle = async () => {
+        if (!checkable) return;
+        const prev = checked;
+        setChecked(!prev); // optimistic
+        try {
+            await toggleKnowledgeUnit(unit.id);
+        } catch {
+            setChecked(prev); // revert on error
+        }
+    };
 
     return (
         <div
             className={`ku-item ${unit.type}${checked ? " checked" : ""}`}
-            onClick={checkable ? () => setChecked(!checked) : undefined}
+            onClick={handleToggle}
             style={checkable ? { cursor: "pointer" } : undefined}
         >
             {checkable ? (
